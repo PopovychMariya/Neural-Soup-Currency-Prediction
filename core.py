@@ -1,6 +1,12 @@
 from sklearn.preprocessing import MinMaxScaler
 import numpy as np
 import torch
+from curl_cffi import requests
+import yfinance as yf
+
+from forex_prediction.constants import CURRENCY_PAIR_TO_TICKER
+from forex_prediction.model import init_model
+from forex_prediction.utils.plotting import plot_future_rate
 
 
 def prepare_data(df, window_size=60):
@@ -32,7 +38,7 @@ def predict_rate(model, data_df, scaler, window_size=60, n_days=10):
     """
     model.eval()
 
-    last_window = data_df["Close"].values[-window_size:]
+    last_window = data_df["Close"].values[-60:]
     last_window_scaled = scaler.transform(last_window.reshape(-1, 1)).flatten()
 
     predictions_scaled = []
@@ -49,3 +55,37 @@ def predict_rate(model, data_df, scaler, window_size=60, n_days=10):
 
     predictions = scaler.inverse_transform(np.array(predictions_scaled).reshape(-1, 1)).flatten()
     return predictions
+
+
+def get_yf_data(session, start_date, end_date, ticker='EURUAH=X'):
+    # start/end_date should be in the following format "2020-11-25"
+
+    stock_data = yf.download(
+        tickers=ticker,
+        interval="1d",
+        start=start_date,
+        end=end_date,
+        progress=False,
+        session=session,
+    )
+
+    return stock_data
+
+
+def get_model_prediction(currency_pair, start_date, end_date, n_days):
+    ticker = CURRENCY_PAIR_TO_TICKER[currency_pair]
+
+    session = requests.Session(impersonate="chrome")
+    session.verify = False
+
+    stock_data = get_yf_data(session, start_date, end_date, ticker)
+    model = init_model(from_checkpoint=True)
+
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    scaler.fit(stock_data["Close"].values.reshape(-1, 1))
+
+    preds = predict_rate(model, stock_data, scaler, n_days=n_days)
+
+    plot_path = plot_future_rate(stock_data, preds, n_days, currency_pair)
+
+    return preds, plot_path

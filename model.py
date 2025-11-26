@@ -1,5 +1,10 @@
+import torch
+from sklearn.preprocessing import MinMaxScaler
 from torch import nn
 from torch.functional import F
+from torch.serialization import safe_globals
+
+from forex_prediction.constants import CHECKPOINT_PATH
 
 
 class RatePredictor(nn.Module):
@@ -30,3 +35,15 @@ class RatePredictor(nn.Module):
         x = self.fc2(x)
 
         return x
+
+
+def init_model(from_checkpoint=True):
+    model = RatePredictor()
+    if from_checkpoint:
+        model = RatePredictor()
+        checkpoint = torch.load(CHECKPOINT_PATH, weights_only=False)
+
+        model.load_state_dict(checkpoint['model_state_dict'])
+
+    return model
+
