@@ -7,7 +7,8 @@ import yfinance as yf
 from constants import CURRENCY_PAIR_TO_TICKER
 from data.load_yf import load_scaler
 from model import init_model
-from utils.plotting import plot_future_rate
+from utils.plotting import plot_future_rate, plot_current_rate
+from functools import cache
 
 
 def prepare_data(df, window_size=60):
@@ -57,8 +58,11 @@ def predict_rate(model, data_df, scaler, window_size=60, n_days=10):
     predictions = scaler.inverse_transform(np.array(predictions_scaled).reshape(-1, 1)).flatten()
     return predictions
 
+@cache
+def get_yf_data(start_date, end_date, ticker='EURUAH=X'):
+    session = requests.Session(impersonate="chrome")
+    session.verify = False
 
-def get_yf_data(session, start_date, end_date, ticker='EURUAH=X'):
     # start/end_date should be in the following format "2020-11-25"
 
     stock_data = yf.download(
@@ -76,10 +80,7 @@ def get_yf_data(session, start_date, end_date, ticker='EURUAH=X'):
 def get_model_prediction(currency_pair, start_date, end_date, n_days):
     ticker = CURRENCY_PAIR_TO_TICKER[currency_pair]
 
-    session = requests.Session(impersonate="chrome")
-    session.verify = False
-
-    stock_data = get_yf_data(session, start_date, end_date, ticker)
+    stock_data = get_yf_data(start_date, end_date, ticker)
     model = init_model(from_checkpoint=True)
     model.eval()
 
@@ -90,3 +91,12 @@ def get_model_prediction(currency_pair, start_date, end_date, n_days):
     plot_path = plot_future_rate(stock_data, preds, n_days, currency_pair)
 
     return preds, plot_path
+
+
+def get_history_rate(currency_pair, start_date, end_date):
+    ticker = CURRENCY_PAIR_TO_TICKER[currency_pair]
+
+    stock_data = get_yf_data(start_date, end_date, ticker)
+    plot_path = plot_current_rate(stock_data["Close"], currency_pair)
+
+    return plot_path
