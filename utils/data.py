@@ -1,4 +1,4 @@
-from forex_prediction.constants import CURRENCY_PAIR_TO_TICKER
+from .constants import CURRENCY_PAIR_TO_TICKER
 import numpy as np
 
 

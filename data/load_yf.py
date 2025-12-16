@@ -4,7 +4,7 @@ from curl_cffi import requests
 import yfinance as yf
 from sklearn.preprocessing import StandardScaler
 import pickle
-from forex_prediction.constants import CURRENCY_PAIR_TO_TICKER
+from .constants import CURRENCY_PAIR_TO_TICKER
 
 
 def get_data(ticker='EURUAH=X'):
