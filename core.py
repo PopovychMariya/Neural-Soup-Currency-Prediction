@@ -5,7 +5,7 @@ from curl_cffi import requests
 import yfinance as yf
 
 from constants import CURRENCY_PAIR_TO_TICKER
-from .data.load_yf import load_scaler
+from data.load_yf import load_scaler
 from model import init_model
 from utils.plotting import plot_future_rate
 
