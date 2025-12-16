@@ -2,7 +2,7 @@ import os
 from telegram import Update, InputFile, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes, CallbackQueryHandler
 from dotenv import load_dotenv
-from core import get_model_prediction, get_history_rate
+from core import get_model_prediction, get_history_rate, get_yf_data
 from datetime import datetime, timedelta
 
 load_dotenv()
@@ -92,6 +92,17 @@ async def history_rate(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def health(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("The bot is working.")
 
+async def current_rate(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    end_date = datetime.now().date()
+    start_date = datetime.now().date() - timedelta(days=120)
+    usd_rates = get_yf_data(start_date, end_date, "USDUAH=X")
+    eur_rates = get_yf_data(start_date, end_date, "EURUAH=X")
+    gbp_rates = get_yf_data(start_date, end_date, "GBPUAH=X")
+    await update.message.reply_text(f"""Current exchange rates:
+USD-UAH: {float(usd_rates.iloc[-1]['Close']):.2f}₴
+EUR-UAH: {float(eur_rates.iloc[-1]['Close']):.2f}₴
+GBP-UAH: {float(gbp_rates.iloc[-1]['Close']):.2f}₴""")
+
 def main():
     application = Application.builder().token(bot_key).build()
     application.add_handler(CommandHandler("start", start))
@@ -99,6 +110,7 @@ def main():
     application.add_handler(CallbackQueryHandler(button_callback))
     application.add_handler(CommandHandler("history_rate", history_rate))
     application.add_handler(CommandHandler("health", health))
+    application.add_handler(CommandHandler("current_rate", current_rate))
     print("Beginning to poll")
     application.run_polling(poll_interval=0.5)
 
