@@ -1,26 +1,22 @@
-import pandas as pd
 import torch
 from torch import nn
 from torch.optim import Adam
+from utils.data import get_full_data
 
 from .constants import CHECKPOINT_PATH
 from .utils.plotting import plot_losses
-from core import prepare_data
 from dataset import ForexDataset
 from model import RatePredictor
 from torch.utils.data import DataLoader, random_split
 
+
 batch_size = 32
-epochs = 25
-learning_rate = 3e-4
-weight_decay = 1e-4
+epochs = 500
+learning_rate = 1e-4
+weight_decay = 1e-3
 test_ratio = 0.2
 
-train_data = "data/yf_eur_uah_stock_data.csv"
-
-stock_data = pd.read_csv(train_data, skiprows=[1, 2])["Close"]
-data, labels, scaler = prepare_data(stock_data)
-
+data, labels = get_full_data()
 dataset = ForexDataset(data, labels)
 
 test_size = int(len(dataset) * test_ratio)
@@ -36,6 +32,7 @@ criterion = nn.MSELoss()
 optimizer = Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 
 
+best_test_loss = float('inf')
 train_losses = []
 test_losses = []
 
@@ -66,11 +63,16 @@ for e in range(epochs):
 
     print(f"Epoch {e+1}/{epochs} | Train Loss: {epoch_loss:.6f} | Test Loss: {test_loss:.6f}")
 
-
-torch.save({
-    'model_state_dict': model.state_dict(),
-    'scaler': scaler
-}, CHECKPOINT_PATH)
+    if test_loss < best_test_loss * 0.95:
+        best_test_loss = test_loss
+        torch.save({
+            'epoch': e + 1,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'train_loss': epoch_loss,
+            'test_loss': test_loss
+        }, CHECKPOINT_PATH)
+        print(f"Checkpoint saved at epoch {e+1} with test loss {test_loss:.6f}")
 
 plot_losses(train_losses, test_losses)
 

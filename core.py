@@ -5,6 +5,7 @@ from curl_cffi import requests
 import yfinance as yf
 
 from constants import CURRENCY_PAIR_TO_TICKER
+from data.load_yf import load_scaler
 from model import init_model
 from utils.plotting import plot_future_rate
 
@@ -80,9 +81,9 @@ def get_model_prediction(currency_pair, start_date, end_date, n_days):
 
     stock_data = get_yf_data(session, start_date, end_date, ticker)
     model = init_model(from_checkpoint=True)
+    model.eval()
 
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    scaler.fit(stock_data["Close"].values.reshape(-1, 1))
+    scaler = load_scaler(f"data/{ticker}_scaler.pkl")
 
     preds = predict_rate(model, stock_data, scaler, n_days=n_days)
 
