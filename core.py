@@ -8,6 +8,7 @@ from constants import CURRENCY_PAIR_TO_TICKER
 from data.load_yf import load_scaler
 from model import init_model
 from utils.plotting import plot_future_rate, plot_current_rate
+from functools import cache
 
 
 def prepare_data(df, window_size=60):
@@ -57,7 +58,7 @@ def predict_rate(model, data_df, scaler, window_size=60, n_days=10):
     predictions = scaler.inverse_transform(np.array(predictions_scaled).reshape(-1, 1)).flatten()
     return predictions
 
-
+@cache
 def get_yf_data(start_date, end_date, ticker='EURUAH=X'):
     session = requests.Session(impersonate="chrome")
     session.verify = False
