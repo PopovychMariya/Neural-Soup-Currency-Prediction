@@ -9,7 +9,7 @@ load_dotenv()
 bot_key = os.environ.get("BOT_KEY")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("To get prediction, type /predict. To get exchange rates for last 120 days, type /history_rate.")
+    await update.message.reply_text("To get prediction, type /predict. To get exchange rates for last 120 days, type /history_rate. To get current exchange rates, type /current_rate.")
 
 async def predict_currencies_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
