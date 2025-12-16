@@ -89,12 +89,16 @@ async def current_rate(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text("Choose currency exchange rate:", reply_markup=reply_markup)
 
+async def health(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("The bot is working.")
+
 def main():
     application = Application.builder().token(bot_key).build()
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("predict", predict_currencies_choice))
     application.add_handler(CallbackQueryHandler(button_callback))
     application.add_handler(CommandHandler("current_rate", current_rate))
+    application.add_handler(CommandHandler("health", health))
     print("Beginning to poll")
     application.run_polling(poll_interval=0.5)
 
