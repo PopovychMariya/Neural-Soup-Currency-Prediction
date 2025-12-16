@@ -9,7 +9,7 @@ load_dotenv()
 bot_key = os.environ.get("BOT_KEY")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("To get prediction, type /predict. To get current exchange rates, type /current_rate.")
+    await update.message.reply_text("To get prediction, type /predict. To get exchange rates for last 120 days, type /history_rate.")
 
 async def predict_currencies_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
@@ -37,7 +37,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if status[2] == "predict":
             stage = "n_days"
         else:
-            stage = "current"
+            stage = "history"
     else:
         n_days = int(status[0])
         stage = "predict"
@@ -65,7 +65,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chat_id=update.effective_chat.id,
             photo=plot_path
         )
-    elif stage == "current":
+    elif stage == "history":
         end_date = datetime.now().date()
         start_date = datetime.now().date() - timedelta(days=120)
         plot_path = get_history_rate(
@@ -78,12 +78,12 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             photo=plot_path
         )
 
-async def current_rate(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def history_rate(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [
-            InlineKeyboardButton("USD = UAH", callback_data="usd uah current"),
-            InlineKeyboardButton("EUR = UAH", callback_data="eur uah current"),
-            InlineKeyboardButton("GBP = UAH", callback_data="gbp uah current")
+            InlineKeyboardButton("USD = UAH", callback_data="usd uah history"),
+            InlineKeyboardButton("EUR = UAH", callback_data="eur uah history"),
+            InlineKeyboardButton("GBP = UAH", callback_data="gbp uah history")
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -97,7 +97,7 @@ def main():
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("predict", predict_currencies_choice))
     application.add_handler(CallbackQueryHandler(button_callback))
-    application.add_handler(CommandHandler("current_rate", current_rate))
+    application.add_handler(CommandHandler("history_rate", history_rate))
     application.add_handler(CommandHandler("health", health))
     print("Beginning to poll")
     application.run_polling(poll_interval=0.5)
